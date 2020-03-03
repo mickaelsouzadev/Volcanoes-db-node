@@ -2,6 +2,7 @@ module.exports = (sequelize, DataTypes) => {
 
     const Volcano = sequelize.define('Volcano', {
         name: DataTypes.STRING,
+        img: DataTypes.STRING,
         description: DataTypes.TEXT,
         type_id: DataTypes.INTEGER
     }, { tableName: 'volcanoes'});
