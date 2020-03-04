@@ -1,14 +1,26 @@
 const express = require('express')
 const cors = require('cors')
+const bodyParser = require('body-parser')
+const multer  = require('multer')
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'img/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, `${file.fieldname}-${Date.now()}.${path.extname(file.originalname)}`);
+    }
+});
+
+const upload = multer({ storage });
+
 
 const app = express()
 
 const { Volcano, Eruption, VolcanoType } = require('./app/models');
 
 app.use(cors())
-
-app.use(express.urlencoded({extended: false}))
-
 
 app.use( (req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -17,6 +29,11 @@ app.use( (req, res, next) => {
     res.setHeader('Access-Control-Allow-Credentials', true)
     next();
 })
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use(express.static('./img/'));
 
 app.get('/volcanoes', async (req, res) => {
     try {
@@ -45,12 +62,19 @@ app.get('/volcanoes-types', async(req, res) => {
     }
 })
 
-app.post('/volcanoes', async(req, res) => {
+app.post('/volcanoes', upload.single('img'), async(req, res) => {
     try {
-        let data = req.body
+        const data = req.body
+        let img = 'default.jpg'
+
+        if(req.file) {
+            img = req.file.filename
+        }
+
         const newVolcano = await Volcano.create({
             name: data.name,
             description: data.description,
+            img: img,
             type_id: data.type
         })
         
